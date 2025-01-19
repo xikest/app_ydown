@@ -1,5 +1,6 @@
 import streamlit as st
-from yt_downloader import YTDownloader
+from functions.yt_downloader import YTDownloader
+
 
 st.title("Downloader")
 
