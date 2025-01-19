@@ -1,5 +1,5 @@
 import streamlit as st
-from .yt_downloader import YTDownloader
+from yt_downloader import YTDownloader
 
 st.title("Downloader")
 
@@ -28,3 +28,5 @@ if st.button("Download"):
                 file_name=file_name,
                 mime=mime_type
             )
+
+
