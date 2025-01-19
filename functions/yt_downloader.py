@@ -7,8 +7,22 @@ json_path = "functions\yt_options.json"  # 옵션 파일 경로
 class YTDownloader:
     @staticmethod
     def download_video(video_url: str, file_type: str) -> str:
-        with open(json_path, 'r', encoding='utf-8') as file:
-            options = json.load(file)
+        options = {
+            "mp3": {
+                "format": "bestaudio/best",
+                "outtmpl": "%(title)s.%(ext)s",
+                "headers": {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+                    }
+                },
+            "mp4": {
+                "format": "bestvideo+bestaudio/best",
+                "outtmpl": "%(title)s.%(ext)s",
+                "headers": {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+                    }
+                }
+            }
         
         try:
             # yt-dlp로 파일 다운로드
@@ -25,3 +39,6 @@ class YTDownloader:
         except Exception as e:
             st.error(f"Unexpected error: {e}")
         return None
+    
+
+  
