@@ -2,7 +2,7 @@ import json
 import yt_dlp
 import streamlit as st
 
-json_path = "yt_options.json"  # 옵션 파일 경로
+json_path = "functions\yt_options.json"  # 옵션 파일 경로
 
 class YTDownloader:
     @staticmethod
