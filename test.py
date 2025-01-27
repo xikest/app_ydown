@@ -1,15 +1,14 @@
 import requests
 
 # 요청할 URL과 데이터 설정
-url = "https://app-ydown-646543566973.asia-northeast3.run.app/download/"
-# url = "https://127.0.0.0:8080/download/"
+# api_url = "https://127.0.0.0:8080/download/"
 data = {
-    "url": "https://youtu.be/SlPhMPnQ58k?si=55RxR7mWvOWtMwGC",  # 실제 유튜브 URL로 대체
+    "url": "",  # 
     "file_type": "mp4"  # 또는 "mp4"
 }
 
 # POST 요청 보내기
-response = requests.post(url, json=data)
+response = requests.post(api_url, json=data)
 
 # 응답 결과 출력
 if response.status_code == 200:
