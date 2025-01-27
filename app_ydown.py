@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from tools.gcp import StorageManager
 import os
 import logging
+from tools.gcp import StorageManager
 from functions import YTDownloader
-
 
 app = FastAPI()
 ydt = YTDownloader()
@@ -43,9 +43,12 @@ async def download_file(request: DownloadRequest):
     else:
         logging.info(f"exist URL: {public_url}")
     
-    return {
-        "message": "success",
-        "file_name": public_url
-    }
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "success",
+            "file_name": public_url
+        }
+    )
     
 
