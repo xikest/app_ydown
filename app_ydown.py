@@ -8,7 +8,6 @@ from functions import YTDownloader
 
 app = FastAPI()
 ydt = YTDownloader()
-bucket_name = "web-ydown-storage"
 storage_manager = StorageManager("web-driver.json")
 logging.basicConfig(level=logging.ERROR)
 
@@ -16,9 +15,12 @@ logging.basicConfig(level=logging.ERROR)
 class DownloadRequest(BaseModel):
     url: str
     file_type: str
+    storage_name: str 
 
 @app.post("/download/")
 async def download_file(request: DownloadRequest):
+    bucket_name = request.storage_name
+    
     if not request.url.strip():
         raise HTTPException(status_code=400, detail="Please enter a valid URL.")
     
