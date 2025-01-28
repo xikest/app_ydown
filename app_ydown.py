@@ -22,10 +22,10 @@ async def download_file(request: DownloadRequest):
     bucket_name = request.storage_name
     
     if not request.url.strip():
-        raise HTTPException(status_code=400, detail="Please enter a valid URL.")
+        raise HTTPException(status_code=400, detail={"error": "Please enter a valid URL."})
     
     if request.file_type not in ["mp3", "mp4"]:
-        raise HTTPException(status_code=400, detail="Invalid file type. Only 'mp3' or 'mp4' allowed.")
+         raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' or 'mp4' allowed."})
     filename = ydt.get_video_filename(url=request.url, file_type=request.file_type)
     signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=filename)
     
@@ -52,7 +52,7 @@ async def download_file(request: DownloadRequest):
             
         except Exception as e:
             logging.error(f"Error processing file: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+            raise HTTPException(status_code=500, detail={"error": f"Error processing file: {str(e)}"})
     else:
         message= "old"
         logging.info(f"exist URL: {signed_url}")
