@@ -28,23 +28,28 @@ async def download_file(request: DownloadRequest):
     public_url = storage_manager.get_public_url_if_file_exists(bucket_name = bucket_name, file_name=filename)
     
     if public_url is None:
-        file_path = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=filename)
-        logging.info(f"Downloaded file: {file_path}") 
-        
-        blob_name = file_path
-        storage_manager.upload_file(bucket_name, file_path, blob_name)
-        
-        if os.path.exists(file_path):
-            os.unlink(file_path)
-        else:
-            logging.warning(f"File {file_path} not found for deletion.")
-        
-        blob = storage_manager.client.bucket(bucket_name).blob(blob_name)
-        blob.make_public()
-        public_url = blob.public_url
-        
-        message= "new"
-        logging.info(f"new URL: {public_url}")
+        try:
+            file_path = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=filename)
+            logging.info(f"Downloaded file: {file_path}") 
+            
+            blob_name = file_path
+            storage_manager.upload_file(bucket_name, file_path, blob_name)
+            
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+            else:
+                logging.warning(f"File {file_path} not found for deletion.")
+            
+            blob = storage_manager.client.bucket(bucket_name).blob(blob_name)
+            blob.make_public()
+            public_url = blob.public_url
+            
+            message= "new"
+            logging.info(f"new URL: {public_url}")
+            
+        except Exception as e:
+            logging.error(f"Error processing file: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
     else:
         message= "old"
         logging.info(f"exist URL: {public_url}")
