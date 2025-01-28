@@ -21,10 +21,14 @@ class DownloadRequest(BaseModel):
 
 @app.post("/download/")
 async def download_file(request: DownloadRequest):
-    def remove_emojis(text):
-        clean_text = emoji.replace_emoji(text, replace='')  # 이모티콘을 빈 문자열로 대체
-        return clean_text
-            
+    def remove_emojis_special_characters(text):
+        format = text.split(".")[-1]
+        text = text.replace(f".{format}", "")
+        text = emoji.replace_emoji(text, replace='')  # 이모티콘을 빈 문자열로 대체
+        text = re.sub(r'[^a-zA-Z0-9가-힣\s]', '', text)
+        cleaned_text = f"{text}.{format}"
+        return cleaned_text
+                
     
     bucket_name = request.storage_name
     
@@ -34,8 +38,7 @@ async def download_file(request: DownloadRequest):
     if request.file_type not in ["mp3"]:
          raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
     filename = ydt.get_video_filename(url=request.url, file_type=request.file_type)
-    filename = remove_emojis(filename)
-    filename = remove_special_characters(filename)
+    filename = remove_emojis_special_characters(filename)
     signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=filename)
     if signed_url is None:
         try:
@@ -104,6 +107,4 @@ async def get_mp3list(request: Request) -> dict:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching files from bucket: {str(e)}")
 
-def remove_special_characters(text):
-    cleaned_text = re.sub(r'[^a-zA-Z0-9가-힣\s]', '', text)
-    return cleaned_text
+
