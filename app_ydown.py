@@ -100,7 +100,7 @@ async def get_mp3list(request: Request) -> dict:
             status_code=200,
             content={
                 "message": "Success",  # 메시지 추가
-                "file_name": link_dict  # 반환할 키 이름을 file_names로 수정
+                "mp3list": link_dict  # 반환할 키 이름을 file_names로 수정
             }
         )
 
