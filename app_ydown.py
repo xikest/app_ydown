@@ -34,13 +34,15 @@ async def download_file(request: DownloadRequest):
         blob_name = file_path
         storage_manager.upload_file(bucket_name, file_path, blob_name)
         
-        os.unlink(file_path)
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+        else:
+            logging.warning(f"File {file_path} not found for deletion.")
         
         blob = storage_manager.client.bucket(bucket_name).blob(blob_name)
         blob.make_public()
         public_url = blob.public_url
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=500, detail="Error downloading the file.")
+        
         message= "new"
         logging.info(f"new URL: {public_url}")
     else:
