@@ -35,6 +35,7 @@ async def download_file(request: DownloadRequest):
          raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
     filename = ydt.get_video_filename(url=request.url, file_type=request.file_type)
     filename = remove_emojis(filename)
+    filename = remove_special_characters(filename)
     signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=filename)
     if signed_url is None:
         try:
@@ -103,4 +104,6 @@ async def get_mp3list(request: Request) -> dict:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching files from bucket: {str(e)}")
 
-
+def remove_special_characters(text):
+    cleaned_text = re.sub(r'[^a-zA-Z0-9가-힣\s]', '', text)
+    return cleaned_text
