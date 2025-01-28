@@ -8,3 +8,4 @@ xik_tools>=0.70
 fastapi>=0.115.2
 uvicorn>=0.32.0
 pydantic>=2.9.2
+emoji>=2.14.1
