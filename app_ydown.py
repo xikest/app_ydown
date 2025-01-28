@@ -18,6 +18,7 @@ class DownloadRequest(BaseModel):
     url: str
     file_type: str
     storage_name: str 
+    options: dict = None
 
 @app.post("/download/")
 async def download_file(request: DownloadRequest):
@@ -31,6 +32,7 @@ async def download_file(request: DownloadRequest):
                 
     
     bucket_name = request.storage_name
+    options = request.options
     
     if not request.url.strip():
         raise HTTPException(status_code=400, detail={"error": "Please enter a valid URL."})
@@ -39,11 +41,11 @@ async def download_file(request: DownloadRequest):
          raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
     file_name = ydt.get_video_filename(url=request.url, file_type=request.file_type)
     file_name = remove_emojis_special_characters(file_name)
-    public_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
-    if public_url is None:
+    signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
+    if signed_url is None:
         try:
             # file_name : xx.mp
-            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name)
+            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name, options=options)
             logging.info(f"Downloaded file: {file_name}") 
             storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name, make_public=False)
             
@@ -53,24 +55,24 @@ async def download_file(request: DownloadRequest):
                 logging.warning(f"File {file_name} not found for deletion.")
             
             
-            public_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=True)
+            signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
             
             message= "new"
-            logging.info(f"new URL: {public_url}")
+            logging.info(f"new URL: {signed_url}")
             
         except Exception as e:
             logging.error(f"Error processing file: {str(e)}")
             raise HTTPException(status_code=500, detail={"error": f"Error processing file: {str(e)}"})
     else:
         message= "old"
-        logging.info(f"exist URL: {public_url}")
+        logging.info(f"exist URL: {signed_url}")
     
     return JSONResponse(
         status_code=200,
         content={
             "message": message,
             "label":file_name,
-            "url": public_url
+            "url": signed_url
         }
     )
     
