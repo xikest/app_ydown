@@ -37,17 +37,15 @@ async def download_file(request: DownloadRequest):
     
     if request.file_type not in ["mp3"]:
          raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
-    filename = ydt.get_video_filename(url=request.url, file_type=request.file_type)
-    filename = remove_emojis_special_characters(filename)
-    signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=filename)
+    file_name = ydt.get_video_filename(url=request.url, file_type=request.file_type)
+    file_name = remove_emojis_special_characters(file_name)
+    signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=True)
     if signed_url is None:
         try:
             # file_name : xx.mp
-            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=filename)
-            
+            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name)
             logging.info(f"Downloaded file: {file_name}") 
-            
-            storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name)
+            storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name, make_public=True)
             
             if os.path.exists(file_name):
                 os.unlink(file_name)
@@ -56,7 +54,6 @@ async def download_file(request: DownloadRequest):
             
             
             signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=file_name)
-            
             
             message= "new"
             logging.info(f"new URL: {signed_url}")
