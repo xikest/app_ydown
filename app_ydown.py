@@ -33,6 +33,9 @@ async def download_file(request: DownloadRequest):
         
         blob_name = file_path
         storage_manager.upload_file(bucket_name, file_path, blob_name)
+        
+        os.unlink(file_path)
+        
         blob = storage_manager.client.bucket(bucket_name).blob(blob_name)
         blob.make_public()
         public_url = blob.public_url
