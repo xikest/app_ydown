@@ -47,17 +47,16 @@ async def download_file(request: DownloadRequest):
             
             logging.info(f"Downloaded file: {file_name}") 
             
-            file_path = file_name
-            storage_manager.upload_file(bucket_name, file_path, file_name)
+            storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name)
             
-            if os.path.exists(file_path):
-                os.unlink(file_path)
+            if os.path.exists(file_name):
+                os.unlink(file_name)
             else:
                 logging.warning(f"File {file_name} not found for deletion.")
             
             
             signed_url = storage_manager.get_signed_url_if_file_exists(bucket_name = bucket_name, file_name=file_name)
-
+            
             
             message= "new"
             logging.info(f"new URL: {signed_url}")
@@ -73,7 +72,8 @@ async def download_file(request: DownloadRequest):
         status_code=200,
         content={
             "message": message,
-            "file_name": signed_url
+            "label":file_name,
+            "url": signed_url
         }
     )
     
