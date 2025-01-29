@@ -18,7 +18,6 @@ class DownloadRequest(BaseModel):
     url: str
     file_type: str
     storage_name: str 
-    options: dict = None
 
 @app.post("/download/")
 async def download_file(request: DownloadRequest):
@@ -32,7 +31,6 @@ async def download_file(request: DownloadRequest):
                 
     
     bucket_name = request.storage_name
-    options = request.options
     
     if not request.url.strip():
         raise HTTPException(status_code=400, detail={"error": "Please enter a valid URL."})
@@ -45,7 +43,7 @@ async def download_file(request: DownloadRequest):
     if signed_url is None:
         try:
             # file_name : xx.mp
-            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name, options=options)
+            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name)
             logging.info(f"Downloaded file: {file_name}") 
             storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name, make_public=False)
             
@@ -105,5 +103,3 @@ async def get_mp3list(request: Request) -> dict:
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching files from bucket: {str(e)}")
-
-

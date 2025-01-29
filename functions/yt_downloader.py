@@ -20,17 +20,15 @@ class YTDownloader:
             return f"{title}.{file_type}"  # 파일 이름 생성    
     
     
-    def download_video(self, video_url: str, file_type: str, options:dict=None, filename_replaced:str=None) -> str:
-        
-        
-        if options is None:
-            options =  {
+    def download_video(self, video_url: str, file_type: str, filename_replaced:str=None) -> str:
+        options =  {
+                    "mp3": {
                         "format": "bestaudio/best",
                         "postprocessors": [
                         {
                             "key": "FFmpegExtractAudio",
                             "preferredcodec": "mp3",
-                            "preferredquality": "128"
+                            "preferredquality": "192"
                         }
                         ],
                         "ffmpeg_location": "/usr/bin/ffmpeg",
@@ -38,13 +36,25 @@ class YTDownloader:
                         "headers": {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
                         }
+                    },
+                    
+                    "mp4": {
+                        "format": "bestvideo+bestaudio/best",
+                        "ffmpeg_location": "/usr/bin/ffmpeg",
+                        "outtmpl": "%(title)s.%(ext)s",
+                        "postprocessors": [{
+                            "key": "FFmpegVideoConvertor",
+                            "preferedformat": "mp4"  
+                        }],
+                        "headers": {
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+                                }
                         }
-               
-           
-                         
+                    }
+                            
         try:
             # yt-dlp로 파일 다운로드
-            with yt_dlp.YoutubeDL(options) as ydl:
+            with yt_dlp.YoutubeDL(options.get(file_type)) as ydl:
                 result = ydl.extract_info(video_url, download=True)
                 file_name = ydl.prepare_filename(result)
                 file_name = file_name.replace(".webm", f".{file_type}")
