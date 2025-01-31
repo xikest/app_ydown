@@ -10,7 +10,7 @@ from functions import YTDownloader
 
 app = FastAPI()
 ydt = YTDownloader()
-storage_manager = StorageManager("web-driver.json")
+storage_manager = StorageManager("ydown-manager.json")
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -29,50 +29,61 @@ async def download_file(request: DownloadRequest):
         cleaned_text = f"{text}.{format}"
         return cleaned_text
                 
-    
     bucket_name = request.storage_name
-    
-    if not request.url.strip():
-        raise HTTPException(status_code=400, detail={"error": "Please enter a valid URL."})
-    
-    if request.file_type not in ["mp3"]:
-         raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
-    file_name = ydt.get_video_filename(url=request.url, file_type=request.file_type)
-    file_name = remove_emojis_special_characters(file_name)
-    signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
-    if signed_url is None:
-        try:
-            # file_name : xx.mp
-            file_name = ydt.download_video(video_url=request.url, file_type=request.file_type, filename_replaced=file_name)
-            logging.info(f"Downloaded file: {file_name}") 
-            storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name, make_public=False)
-            
-            if os.path.exists(file_name):
-                os.unlink(file_name)
-            else:
-                logging.warning(f"File {file_name} not found for deletion.")
-            
-            
-            signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
-            
-            message= "new"
-            logging.info(f"new URL: {signed_url}")
-            
-        except Exception as e:
-            logging.error(f"Error processing file: {str(e)}")
-            raise HTTPException(status_code=500, detail={"error": f"Error processing file: {str(e)}"})
-    else:
-        message= "old"
-        logging.info(f"exist URL: {signed_url}")
-    
-    return JSONResponse(
-        status_code=200,
-        content={
-            "message": message,
-            "label":file_name,
-            "url": signed_url
-        }
-    )
+    url = request.url
+    file_type=request.file_type
+        
+    try:
+        if not request.url.strip():
+            raise HTTPException(status_code=400, detail={"error": "Please enter a valid URL."})
+        
+        if request.file_type not in ["mp3"]:
+            raise HTTPException(status_code=400, detail={"error": "Invalid file type. Only 'mp3' allowed."})
+        file_name = ydt.get_video_filename(url=url, file_type=file_type)
+        file_name = remove_emojis_special_characters(file_name)
+        signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
+        if signed_url is None:
+            try:
+                # file_name : xx.mp
+                file_name = ydt.download_video(video_url=url, file_type=file_type, filename_replaced=file_name)
+                if not file_name:
+                    logging.error("Download failed: file_name is None")
+                    raise HTTPException(status_code=500, detail="Failed to download video")
+                else:
+                    logging.info(f"Downloaded file: {file_name}") 
+                storage_manager.upload_file(bucket_name, file_path=file_name, destination_blob_name=file_name, make_public=False)
+                
+                if os.path.exists(file_name):
+                    os.unlink(file_name)
+                else:
+                    logging.warning(f"File {file_name} not found for deletion.")
+                
+                
+                signed_url = storage_manager.get_url_if_file_exists(bucket_name = bucket_name, file_name=file_name, use_public=False)
+                
+                message= "new"
+                logging.info(f"new URL: {signed_url}")
+                
+            except Exception as e:
+                logging.error(f"Error processing file: {str(e)}")
+                raise HTTPException(status_code=500, detail={"error": f"Error processing file: {str(e)}"})
+        else:
+            message= "old"
+            logging.info(f"exist URL: {signed_url}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": message,
+                "label":file_name,
+                "url": signed_url
+            })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error: {str(e)}"
+            )
+
     
 @app.post("/mp3list/")
 async def get_mp3list(request: Request) -> dict:
